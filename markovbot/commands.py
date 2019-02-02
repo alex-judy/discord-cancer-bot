@@ -61,7 +61,7 @@ async def mock(context, user: str = None):
 
         # Get messages from user in current channel
         async for message in markovbot.logs_from(context.message.channel, limit=500):
-            if message.author.id == targeted_user.id:
+            if message.author.id == targeted_user.id and not message.content.startswith('!cancer'):
                 logs_by_user.append(message)
 
         # Get latest message from user
@@ -71,12 +71,6 @@ async def mock(context, user: str = None):
         sentence = mock_string(targeted_message.content)
 
         await markovbot.say(sentence)
-
-@asyncio.coroutine
-def get_logs_from_channel(channel):
-    logs = yield from markovbot.logs_from(channel, limit=500)
-    return logs
-
 
 def mock_string(sentence: str):
     if sentence is None:
