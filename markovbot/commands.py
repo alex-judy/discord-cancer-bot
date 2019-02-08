@@ -52,9 +52,7 @@ async def mock(context, user: str = None):
     if user is None:
         await markovbot.say('Using a random user...')
         members = server_context.server.members
-        member_count = len(members) - 1
-        member_select = random.randint(0, member_count)
-        targeted_user = list(members)[member_select]
+        targeted_user = list(members)[random.randint(0, len(members)) - 1]
         await markovbot.say('Selected user {}'.format(targeted_user))
 
     else:
