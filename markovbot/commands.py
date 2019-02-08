@@ -92,39 +92,26 @@ def mock_string(sentence: str):
     if sentence is None:
         return
 
-    # TODO: Might end up changing this to handle smaller strings.
-    mock_count = math.ceil(len(sentence) - len(sentence) / 2)
+    char_count = len(sentence) - sentence.count(' ')
+
+    mock_count = math.ceil(char_count - char_count / 2)
     sentence_mock = list(sentence.lower())
 
-    # TODO: Make a comparator array?
-    # elements = getRandomElements(sentence_mock, mock_count)
-    # TODO: Probably need to rename these for clarity.
-    i = 0
-    j = 0
-    k = 3
-    while j in range(0, mock_count) and k > 0:
-        # TODO: This could end up being too random and not get any chars.
+    index = 0
+    current_mock_count = 0
+    loop_limit = 3
+    while current_mock_count in range(0, mock_count) and loop_limit > 0:
         capitalize = bool(random.getrandbits(1))
-        val = str(sentence_mock[i])
+        val = str(sentence_mock[index])
         # Don't want to count a char mutation for spaces / integers / capitals.
-        if capitalize and sentence_mock[i] != ' ' and not (val.isdigit() or val.isupper()):
-            sentence_mock[i] = sentence_mock[i].upper()
-            j += 1
-        i += 1
+        if capitalize and sentence_mock[index] != ' ' and not (val.isdigit() or val.isupper()):
+            sentence_mock[index] = sentence_mock[index].upper()
+            current_mock_count += 1
+        index += 1
         # Restart at beginning of string if mock_count is not met.
-        # Only allow k runs
-        if i == len(sentence_mock):
-            i = 0
-            k -= 1
+        # Only allow # of runs set in loop_limit above.
+        if index == len(sentence_mock):
+            index = 0
+            loop_limit -= 1
     sentence = ''.join(str(e) for e in sentence_mock)
     return sentence
-
-# Leaving this for now since I'm working off master.
-# def getRandomElements(sentence_mock, mock_count):
-#     result = []
-#     i = 0
-#     while i in range(0, mock_count):
-#         result.append(sentence_mock[math.floor(
-#             random.random() * sentence_mock.length)])
-#         i += 1
-#     return result
