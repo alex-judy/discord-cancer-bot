@@ -1,12 +1,7 @@
-import asyncio
 import logging
 import random
-import math
 
-import markovify
-
-from discord.ext.commands import core
-
+from markovbot import utilities
 from markovbot import markovbot, datastore
 
 log = logging.getLogger(__name__)
@@ -41,7 +36,9 @@ async def say(context, user: str = None):
         sentence = server_context.markov.make_sentence_user(db_user)
 
         if sentence is None:
-            await markovbot.say('Unable to generate message for {}. This is probably because they have not sent enough messages.'.format(user))
+            await markovbot.say(
+                'Unable to generate message for {}. This is probably because they have not sent enough messages.'.format(
+                    user))
             return
 
     await markovbot.say(sentence)
@@ -50,80 +47,42 @@ async def say(context, user: str = None):
 @markovbot.command(pass_context=True, help='Mock the last specified user message.')
 async def mock(context, user: str = None):
     server_context = context.server_context
+    targeted_user = None
 
     if user is None:
-        await markovbot.say('Please specify a user.')
-        return
+        await markovbot.say('Using a random user...')
+        members = server_context.server.members
+        member_count = len(members) - 1
+        member_select = random.randint(0, member_count)
+        targeted_user = list(members)[member_select]
+        await markovbot.say('Selected user {}'.format(targeted_user))
 
     else:
-        targeted_user = None
         for member in server_context.server.members:
             if member.nick == user:
                 targeted_user = member
             else:
                 targeted_user = server_context.server.get_member_named(user)
+    logs_by_user = list()
 
-        if targeted_user is None:
-            await markovbot.say('Could not find user. Please try another user.')
-            return
+    # Get messages from user in current channel
+    async for message in markovbot.logs_from(context.message.channel, limit=500):
+        if message.author.id == targeted_user.id and not message.content.startswith('!cancer'):
+            logs_by_user.append(message)
 
-        targeted_user = server_context.server.get_member_named(user)
-        logs_by_user = list()
+    # Get latest message from user
+    if not logs_by_user:
+        await markovbot.say('User does not have any messages in this channel.')
+        return
 
-        # Get messages from user in current channel
-        async for message in markovbot.logs_from(context.message.channel, limit=500):
-            if message.author.id == targeted_user.id and not message.content.startswith('!cancer'):
-                logs_by_user.append(message)
+    logs_by_user.sort(key=lambda message: message.timestamp, reverse=True)
 
-        # Get latest message from user
-        if not logs_by_user:
-            await markovbot.say('User does not have any messages in this channel.')
-            return
+    targeted_message = logs_by_user[0]
+    sentence = utilities.Utility.mock_string(targeted_message.content)
 
-        logs_by_user.sort(key=lambda message: message.timestamp, reverse=True)
+    if sentence is None:
+        await markovbot.say('No alphabetic letters were found in previous message. '
+                            'Make sure {} uses letters in their message next time you weeb.'.format(user))
+        return
 
-        targeted_message = logs_by_user[0]
-        sentence = mock_string(targeted_message.content)
-
-        if sentence is None:
-            await markovbot.say('No alphabetic letters were found in previous message. '
-                                'Make sure {} uses letters in their message next time you weeb.'.format(user))
-            return
-
-        await markovbot.say(sentence)
-
-
-def mock_string(sentence: str):
-    char_count = len(sentence)
-
-    # Subtract from char_count if not a letter
-    for i in sentence:
-        if not i.isalpha():
-            char_count -= 1
-
-    mock_count = math.ceil(char_count - char_count / 2)
-    sentence_mock = list(sentence.lower())
-
-    index = 0
-    current_mock_count = 0
-    loop_limit = 4
-    while current_mock_count in range(0, mock_count) and loop_limit > 0:
-        capitalize = bool(random.getrandbits(1))
-        val = str(sentence_mock[index])
-        # Don't want to count a char mutation for spaces / integers / capitals.
-        if capitalize and sentence_mock[index] != ' ' and val.isalpha() and not (val.isdigit() or val.isupper()):
-            sentence_mock[index] = sentence_mock[index].upper()
-            current_mock_count += 1
-        index += 1
-        # Restart at beginning of string if mock_count is not met.
-        # Only allow # of runs set in loop_limit above.
-        if index == len(sentence_mock):
-            index = 0
-            loop_limit -= 1
-
-    sentence = ''.join(str(e) for e in sentence_mock)
-
-    if current_mock_count < 1:
-        return None
-
-    return sentence
+    await markovbot.say(sentence)
