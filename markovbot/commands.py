@@ -77,7 +77,7 @@ async def mock(context, user: str = None):
 
         # Get latest message from user
         if not logs_by_user:
-            await markovbot.say('User does not have any messages in this channel.')
+            await markovbot.say('User does not have any messages in this channel')
             return
 
         logs_by_user.sort(key=lambda message: message.timestamp, reverse=True)
