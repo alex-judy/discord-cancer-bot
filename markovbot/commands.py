@@ -23,7 +23,7 @@ async def say(context, user: str = None):
         return
 
     if user is None:
-        log.debug('Bot issued say command on server %s',
+        log.debug('Bot issued say command on server %s.',
                   server_context.server.name)
         sentence = server_context.markov.make_sentence_server()
 
@@ -52,7 +52,7 @@ async def mock(context, user: str = None):
     server_context = context.server_context
 
     if user is None:
-        await markovbot.say('Please specify a user')
+        await markovbot.say('Please specify a user.')
         return
 
     else:
@@ -77,7 +77,7 @@ async def mock(context, user: str = None):
 
         # Get latest message from user
         if not logs_by_user:
-            await markovbot.say('User does not have any messages in this channel')
+            await markovbot.say('User does not have any messages in this channel.')
             return
 
         logs_by_user.sort(key=lambda message: message.timestamp, reverse=True)
@@ -87,7 +87,8 @@ async def mock(context, user: str = None):
 
         if sentence is None:
             await markovbot.say('No alphabetic letters were found in previous message. '
-                                'Try entering letters next time you weeb')
+                                'Make sure {} uses letters in their message next time you weeb.'.format(user))
+            return
 
         await markovbot.say(sentence)
 
@@ -123,6 +124,6 @@ def mock_string(sentence: str):
     sentence = ''.join(str(e) for e in sentence_mock)
 
     if current_mock_count < 1:
-        sentence = 'Last message from user did not contain any letters'
+        return None
 
     return sentence
