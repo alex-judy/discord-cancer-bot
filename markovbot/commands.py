@@ -50,7 +50,6 @@ async def mock(context, user: str = None):
     targeted_user = None
 
     if user is None:
-        await markovbot.say('Using a random user...')
         members = server_context.server.members
         targeted_user = list(members)[random.randint(0, len(members)) - 1]
         await markovbot.say('Selected user {}'.format(targeted_user))
@@ -76,7 +75,7 @@ async def mock(context, user: str = None):
     logs_by_user.sort(key=lambda message: message.timestamp, reverse=True)
 
     targeted_message = logs_by_user[0]
-    sentence = utilities.Utility.mock_string(targeted_message.content)
+    sentence = utilities.mock_string(targeted_message.content)
 
     if sentence is None:
         await markovbot.say('No alphabetic letters were found in previous message. '
